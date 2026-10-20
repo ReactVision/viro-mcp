@@ -1,0 +1,76 @@
+{
+  "_comment": "Curated AR domain reference: lighting models, physics body types, animation easings, shader modifier entry points. Edit here to update without code changes.",
+  "lighting_models": [
+    {
+      "name": "PBR",
+      "description": "Physically Based Rendering. Realistic metal/dielectric materials using GGX BRDF.",
+      "when_to_use": "Photorealistic surfaces: metal, plastic, leather, wood with proper texture maps.",
+      "required_props": ["lightingModel: 'PBR'", "diffuseColor or diffuseTexture"],
+      "optional_props": ["metalness (0.0-1.0)", "roughness (0.0-1.0)", "normalTexture", "metalnessTexture", "roughnessTexture", "ambientOcclusionTexture", "emissiveColor"],
+      "platforms": "ios, android, quest"
+    },
+    {
+      "name": "Blinn",
+      "description": "Blinn-Phong shading with diffuse + specular highlights. Cheaper than PBR.",
+      "when_to_use": "Stylized surfaces, performance-sensitive scenes, mobile/Quest.",
+      "required_props": ["lightingModel: 'Blinn'", "diffuseColor or diffuseTexture"],
+      "optional_props": ["specularTexture", "shininess (default 6.0)"],
+      "platforms": "ios, android, quest"
+    },
+    {
+      "name": "Lambert",
+      "description": "Pure diffuse (matte) shading, no specular component.",
+      "when_to_use": "Cloth, paper, chalk — anything non-shiny.",
+      "required_props": ["lightingModel: 'Lambert'", "diffuseColor or diffuseTexture"],
+      "optional_props": [],
+      "platforms": "ios, android, quest"
+    },
+    {
+      "name": "Constant",
+      "description": "No lighting calculation — the diffuse color/texture is rendered as-is.",
+      "when_to_use": "UI overlays, glow effects, unlit objects, particle emitter materials.",
+      "required_props": ["lightingModel: 'Constant'", "diffuseColor or diffuseTexture"],
+      "optional_props": [],
+      "platforms": "ios, android, quest"
+    }
+  ],
+  "physics_body_types": [
+    {
+      "name": "Static",
+      "description": "Infinite mass, never moves. Other bodies collide against it.",
+      "when_to_use": "Floors, walls, immovable scenery.",
+      "required_props": ["type: 'Static'", "mass: 0"],
+      "optional_props": ["shape", "friction", "restitution"]
+    },
+    {
+      "name": "Dynamic",
+      "description": "Affected by gravity and forces. Reacts to collisions.",
+      "when_to_use": "Falling objects, projectiles, anything that should respond to physics.",
+      "required_props": ["type: 'Dynamic'", "mass: > 0"],
+      "optional_props": ["shape", "friction", "restitution", "useGravity", "velocity", "force", "torque", "enabled"]
+    },
+    {
+      "name": "Kinematic",
+      "description": "Moves only when you tell it to (via animations / explicit position changes). Not affected by physics but other Dynamic bodies bounce off it.",
+      "when_to_use": "Moving platforms, animated obstacles, scripted hazards.",
+      "required_props": ["type: 'Kinematic'", "mass: 0"],
+      "optional_props": ["shape", "friction", "restitution"]
+    }
+  ],
+  "animation_easings": [
+    { "name": "Linear",         "curve": "constant velocity",          "use_for": "neutral motion, mechanical movement" },
+    { "name": "EaseIn",         "curve": "slow start, fast end",       "use_for": "acceleration, falling" },
+    { "name": "EaseOut",        "curve": "fast start, slow end",       "use_for": "deceleration, landing" },
+    { "name": "EaseInEaseOut",  "curve": "slow start and end",         "use_for": "most natural motion — default choice" },
+    { "name": "Bounce",         "curve": "overshoot and settle",       "use_for": "playful animations, pop-in effects" },
+    { "name": "PowerDecel",     "curve": "strong deceleration curve",  "use_for": "punchy slowdowns" },
+    { "name": "PowerAccel",     "curve": "strong acceleration curve",  "use_for": "punchy speedups" }
+  ],
+  "shader_modifier_entry_points": [
+    { "name": "Geometric",        "stage": "vertex",   "purpose": "Modify vertex positions, normals before geometry pass.",            "uniforms_visible": "_geometry.position, _geometry.normal, _geometry.uv" },
+    { "name": "Vertex",           "stage": "vertex",   "purpose": "Post-transform vertex modifications.",                              "uniforms_visible": "_geometry.position (transformed)" },
+    { "name": "Surface",          "stage": "fragment", "purpose": "Modify surface properties (diffuse color, normal, roughness).",     "uniforms_visible": "_surface.diffuse_color, _surface.normal, _surface.metalness, _surface.roughness, _surface.diffuse_texcoord" },
+    { "name": "LightingModel",    "stage": "fragment", "purpose": "Override lighting computation entirely.",                           "uniforms_visible": "_lightingContribution, _output_color" },
+    { "name": "Fragment",         "stage": "fragment", "purpose": "Final color modification before write-out.",                        "uniforms_visible": "_output_color" }
+  ]
+}

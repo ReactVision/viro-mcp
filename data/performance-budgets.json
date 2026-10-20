@@ -1,0 +1,37 @@
+{
+  "_comment": "Rough, general-purpose AR/VR performance guidance — NOT official ReactVision/platform-vendor specs. Real budgets depend on the specific device, scene complexity, and how many assets are on screen at once; these are conservative single-model ballpark thresholds meant to catch an obviously oversized asset, not to certify a scene as performant. Edit here to tune without touching code.",
+  "platforms": [
+    {
+      "id": "quest",
+      "label": "Meta Quest (standalone)",
+      "max_triangles": 50000,
+      "max_texture_bytes": 10485760,
+      "max_texture_dimension": 2048,
+      "notes": "Standalone mobile GPU — the most constrained target. Prefer texture atlasing and 1-2 draw calls per model where possible."
+    },
+    {
+      "id": "mobile-ar",
+      "label": "iOS/Android (ARKit/ARCore)",
+      "max_triangles": 100000,
+      "max_texture_bytes": 20971520,
+      "max_texture_dimension": 4096,
+      "notes": "Phone GPUs vary widely; this assumes a mid-range device from the last few years, not the newest flagship."
+    },
+    {
+      "id": "visionos",
+      "label": "Apple visionOS",
+      "max_triangles": 150000,
+      "max_texture_bytes": 33554432,
+      "max_texture_dimension": 4096,
+      "notes": "More headroom than phone AR, but still a headset GPU budget, not a desktop one."
+    },
+    {
+      "id": "web",
+      "label": "Web (WASM/WebGL2)",
+      "max_triangles": 80000,
+      "max_texture_bytes": 16777216,
+      "max_texture_dimension": 2048,
+      "notes": "Bounded by the slowest realistic target browser/device, not the developer's own machine."
+    }
+  ]
+}

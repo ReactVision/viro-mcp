@@ -1,0 +1,9 @@
+node_modules/
+dist/
+knowledge/*.db
+knowledge/*.db-wal
+knowledge/*.db-shm
+*.log
+.env
+.DS_Store
+.claude/

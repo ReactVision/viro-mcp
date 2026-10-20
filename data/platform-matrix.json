@@ -1,0 +1,42 @@
+{
+  "_comment": "Curated platform support matrix for ReactViro features. Edit this file to update the matrix without recompiling — the tool reads it at runtime.",
+  "platforms": ["ios", "android", "quest", "visionos"],
+  "platform_labels": {
+    "ios":      "🍎 iOS (ARKit)",
+    "android":  "🤖 Android (ARCore)",
+    "quest":    "🎮 Meta Quest (OpenXR)",
+    "visionos": "🥽 Apple visionOS"
+  },
+  "features": [
+    { "feature": "Plane Detection (horizontal)",                      "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "Quest 3/3S via XR_FB_scene room model (Space Setup + horizonos.permission.USE_ANCHOR_API)" },
+    { "feature": "Plane Detection (vertical)",                        "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "Quest 3/3S via XR_FB_scene room model (Space Setup + horizonos.permission.USE_ANCHOR_API)" },
+    { "feature": "Image Tracking (ViroARImageMarker)",                "support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "" },
+    { "feature": "Object Tracking (ViroARObjectMarker)","support": { "ios": true,  "android": false, "quest": false, "visionos": false }, "notes": "iOS/ARKit only" },
+    { "feature": "Cloud Anchors (ReactVisionCCA)",                    "support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "Requires ReactVisionCCA" },
+    { "feature": "Geospatial / VPS",                                  "support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "iOS: ReactVision provider, or the ARCore Geospatial pods (ios.includeARCore). Android: ReactVision provider or the ARCore Geospatial API" },
+    { "feature": "VPS-Lite v1 (scan/host + mesh attach)","support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "Distinct from the row above: requires provider=\"reactvision\" (ReactVisionCCA), not ARCore's own Geospatial API. startScan/finishScan define their own location frame (no pre-placed anchor); mesh attach uses LiDAR (iOS) / ARCore depth (Android) for occlusion+physics. See docs/VPS_LITE.md" },
+    { "feature": "AR Session Recording (raw video+IMU+pose)","support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "startRecording/stopRecording on ViroARSceneNavigator — offline tinyvio-replay input format, NOT the same feature as ViroCameraTexture.startRecording() (camera-feed-only MP4). See docs/AR_SESSION_RECORDING.md" },
+    { "feature": "Scene Semantics",                                   "support": { "ios": false, "android": true,  "quest": false, "visionos": false }, "notes": "ARCore Semantic API" },
+    { "feature": "Depth / LiDAR",                                     "support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "iOS: LiDAR, or the monocular depth estimator as fallback. Android: ARCore Depth API (ARCore 1.18+)" },
+    { "feature": "Depth Mesh Collision",                              "support": { "ios": true,  "android": false, "quest": false, "visionos": false }, "notes": "LiDAR required" },
+    { "feature": "Depth Occlusion",                                   "support": { "ios": true,  "android": true,  "quest": false, "visionos": false }, "notes": "occlusionMode=\"depthBased\". iOS: LiDAR, or the monocular depth estimator as fallback. Android: ARCore Depth API (ARCore 1.18+)" },
+    { "feature": "Portals (ViroPortalScene)",                         "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "visionOS: VRTPortal.mm is excluded and traversePortals stops at the root \u2014 a portal is recursive by definition" },
+    { "feature": "360° Images",                                       "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "visionOS: setBackgroundSphere, validated in the test scene" },
+    { "feature": "360° Video",                                        "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "visionOS: VROVideoTextureiOS is not in the renderer target" },
+    { "feature": "Particle Effects",                                  "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "visionOS: VROParticleUBOMetal, validated M2.6-C" },
+    { "feature": "PBR Materials",                                     "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "visionOS: IBL reimplemented for Metal, confirmed on device 2026-08-26" },
+    { "feature": "Custom Shaders (GLSL)",                             "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "Mobile GLSL ES. visionOS: the modifier body is injected into MSL untranslated, so GLSL-only spellings (highp, vec3/vec4, mat3, texture2D) fail to compile; only source that is already valid MSL survives. Affects ViroPolyline and any custom modifier" },
+    { "feature": "Skeletal Animations",                               "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "GLB/VRX models. visionOS: GLB/GLTF only \u2014 VROFBXLoader is excluded" },
+    { "feature": "Morph Targets",                                     "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "VROMorpher builds for Android (Quest included) and for xros" },
+    { "feature": "Physics Engine (Bullet3)",                          "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "Bullet3 ships for arm64-v8a, which is Quest\u2019s ABI. visionOS: Bullet3 and VROPhysicsBody/World build for xros" },
+    { "feature": "Spatial Audio",                                     "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "" },
+    { "feature": "Passthrough / Mixed Reality",                       "support": { "ios": false, "android": false, "quest": true,  "visionos": true  }, "notes": "Quest 3/3S passthrough. visionOS: the \"mixed\" ImmersiveSpace style is the default and blends content over passthrough \u2014 distinct from camera pixel access, which visionOS does not grant" },
+    { "feature": "Mixed Reality AR scene (Quest)",                    "support": { "ios": false, "android": false, "quest": true,  "visionos": false }, "notes": "ViroARScene through ViroXRSceneNavigator on Quest 3/3S; passthrough auto-enabled. Set hdrEnabled={false} (HDR composite hides passthrough)" },
+    { "feature": "Object Detection (ViroObjectDetector)","support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "YOLOE via @reactvision/react-viro-onnx. Quest 3/3S (Horizon OS v74+) sources frames from the Meta Passthrough Camera API; v1 = labels + normalized boxes only" },
+    { "feature": "Hand Tracking (Quest)",                             "support": { "ios": false, "android": false, "quest": true,  "visionos": false }, "notes": "Meta Quest" },
+    { "feature": "visionOS ImmersiveSpace",                           "support": { "ios": false, "android": false, "quest": false, "visionos": true  }, "notes": "" },
+    { "feature": "Co-location: shared frame",                         "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "Same-family only. Quest needs react-viro 3.0.1 or newer (it does not work in 3.0.0) and a mixed-reality scene (ViroARScene root) \u2014 a VR scene has no AR session and no anchor to share. Verified on a Quest 3. visionOS goes through ARKit's shared coordinate space rather than a navigator method, and needs the ViroReactUI pod" },
+        { "feature": "Co-location: channel + state",                      "support": { "ios": true,  "android": true,  "quest": true,  "visionos": true  }, "notes": "Needs no camera and no navigator method, so it works wherever the app runs" },
+    { "feature": "Studio Integration",                                "support": { "ios": true,  "android": true,  "quest": true,  "visionos": false }, "notes": "ReactVision Studio. Quest renders through ViroXRSceneNavigator. visionOS: the navigator is ready but StudioARScene still roots on ViroARScene, which visionOS excludes" }
+  ]
+}

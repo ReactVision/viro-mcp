@@ -1,0 +1,22 @@
+{
+  "_comment": "Maps ReactViro JSX component names to the platform-matrix feature(s) they depend on. Used by reactviro_check_platform_support and reactviro_generate_scene to warn about unsupported combinations. Add/edit entries here as the SDK evolves.",
+  "components": {
+    "ViroARPlaneSelector":    ["Plane Detection (horizontal)"],
+    "ViroARPlane":            ["Plane Detection (horizontal)"],
+    "ViroARImageMarker":      ["Image Tracking (ViroARImageMarker)"],
+    "ViroARObjectMarker":     ["Object Tracking (ViroARObjectMarker)"],
+    "ViroPortalScene":        ["Portals (ViroPortalScene)"],
+    "ViroPortal":             ["Portals (ViroPortalScene)"],
+    "ViroParticleEmitter":    ["Particle Effects"],
+    "Viro360Image":           ["360° Images"],
+    "Viro360Video":           ["360° Video"],
+    "ViroSpatialSound":       ["Spatial Audio"],
+    "ViroObjectDetector":     ["Object Detection (ViroObjectDetector)"]
+  },
+  "props": {
+    "shaderModifiers":        ["Custom Shaders (GLSL)"],
+    "morphTargets":           ["Morph Targets"],
+    "physicsBody":            ["Physics Engine (Bullet3)"],
+    "geospatial":             ["Geospatial / VPS"]
+  }
+}

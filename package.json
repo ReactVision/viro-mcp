@@ -1,0 +1,45 @@
+{
+  "name": "viro-mcp",
+  "version": "1.0.0",
+  "description": "The open knowledge layer of the ViroReact MCP server: structured, source-level knowledge of ViroReact (@reactvision/react-viro) for AI coding agents.",
+  "license": "Elastic-2.0",
+  "author": "ReactVision, Inc.",
+  "homepage": "https://github.com/ReactVision/viro-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ReactVision/viro-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ReactVision/viro-mcp/issues"
+  },
+  "private": true,
+  "type": "module",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env dist/src/index.js",
+    "dev": "tsx --env-file-if-exists=.env src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "index": "tsx --env-file-if-exists=.env indexer/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "better-sqlite3": "^9.6.0",
+    "express": "^4.21.2",
+    "typescript": "^5.7.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "vitest": "^4.1.12"
+  }
+}
