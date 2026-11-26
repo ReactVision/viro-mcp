@@ -57,6 +57,19 @@ Config-file clients take the same URL:
 
 Full setup guide: <https://viro-community.readme.io/docs/viro-mcp-server>
 
+### Claude plugin
+
+The `reactvision-xr-builder` plugin in [`plugin/`](./plugin) connects the same server and adds skills that tell Claude how to use its tools for each task: getting started, project setup, Viro Live previews, performance reviews, ViroReact upgrades, crash debugging and 8th Wall migration.
+
+In Claude Code:
+
+```
+/plugin marketplace add ReactVision/viro-mcp
+/plugin install reactvision-xr-builder@reactvision
+```
+
+In Claude on the web, Desktop or Cowork: Customize → Plugins → Add → Add marketplace, enter `ReactVision/viro-mcp`, then install ReactVision XR Builder. Its Connectors tab then asks you to connect the server and sign in.
+
 ## Features
 
 Every tool is prefixed `reactviro_`. The tools below are all in this repository; they are read-only and answer from a knowledge base built from the ViroReact source.
