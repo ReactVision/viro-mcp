@@ -1,0 +1,21 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "reactvision-xr-builder",
+  "displayName": "ReactVision XR Builder",
+  "version": "1.1.0",
+  "description": "Build, preview, validate and render ViroReact AR and VR scenes with ReactVision's MCP: live 3D previews, component docs, examples and 8th Wall migration.",
+  "logo": "assets/logo.png",
+  "author": {
+    "name": "ReactVision",
+    "url": "https://www.reactvision.xyz"
+  },
+  "homepage": "https://www.reactvision.xyz/mcp",
+  "repository": "https://github.com/ReactVision/viro-mcp",
+  "license": "Elastic-2.0",
+  "keywords": ["ReactVision", "ViroReact", "XR", "AR", "VR", "React Native", "8th Wall", "Meta Quest", "visionOS"],
+  "suggestedPrompts": [
+    "Build an AR scene that places a 3D model on a detected floor, and preview it",
+    "Which ViroReact components work on Meta Quest and visionOS?",
+    "Migrate my 8th Wall project to ViroReact"
+  ]
+}
