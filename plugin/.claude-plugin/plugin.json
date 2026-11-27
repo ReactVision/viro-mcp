@@ -14,5 +14,11 @@
   "privacyPolicyUrl": "https://www.reactvision.xyz/policies/privacy-policy/",
   "termsOfServiceUrl": "https://www.reactvision.xyz/policies/terms-of-service/",
   "icon": "./assets/logo.png",
-  "license": "Elastic-2.0"
+  "license": "Elastic-2.0",
+  "mcpServers": {
+    "reactvision-viro": {
+      "type": "http",
+      "url": "https://mcp.reactvision.xyz/viro"
+    }
+  }
 }
