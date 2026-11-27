@@ -32,6 +32,15 @@ The server needs a free [ReactVision Studio](https://studio.reactvision.xyz) acc
 
 Validation and previews do not replace testing on a physical device.
 
+## Where your files go
+
+Where Claude can run shell commands, some tools return a `curl` command that uploads files from your machine instead of passing them through the chat:
+
+- Viro Live previews: your project folder and its local models, images and media go to `mcp.reactvision.xyz`, the server this plugin connects to.
+- 8th Wall migrations and code environment renders: the export zip or the code bundle goes to a signed upload link on ReactVision Studio's storage, which belongs to the same ReactVision account and team.
+
+The skills send nothing to any other service.
+
 ## Links
 
 - Website: https://www.reactvision.xyz/mcp
