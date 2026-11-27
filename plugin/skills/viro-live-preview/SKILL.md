@@ -20,7 +20,7 @@ Call `reactviro_live_preview` when the developer wants to see a scene, or after 
 
 Local models and images show as placeholders until the preview has the real files.
 
-- With a shell (Claude Code, Codex, Cursor), upload each one with the `curl -T` command in the tool's result; the open preview swaps to it.
+- With a shell (Claude Code, Codex, Cursor), upload each one to `https://mcp.reactvision.xyz` with the `curl -T` command in the tool's result; the open preview swaps to it.
 - Without a shell, or when the developer has public URLs for them (a CDN, or Studio team assets from `reactviro_list_studio_content`), pass them in `assets`, keyed by the same root-relative path.
 
 ## Where it shows
