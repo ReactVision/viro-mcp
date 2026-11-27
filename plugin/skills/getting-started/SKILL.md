@@ -37,7 +37,7 @@ If a detail is unknown, offer a sensible default and keep moving. Do not ask the
 
 - Start with `reactviro_get_overview` when the user is exploring the MCP or is unsure where to look.
 - Use `reactviro_get_docs` for indexed guides and framework docs, `reactviro_search` for targeted questions, and component/prop lookups for API details.
-- Use `reactviro_list_examples`, `reactviro_get_example`, and `reactviro_examples_using` to find and explain real showcase patterns. Summarize how an example works before adapting it; do not imply an example is a complete production app if it is only a scene.
+- Use `reactviro_list_examples` (pass `component` for the examples that use one) and `reactviro_get_example` to find and explain real showcase patterns. Summarize how an example works before adapting it; do not imply an example is a complete production app if it is only a scene.
 - Explain what is established by current docs or code and label any inference. Link to ReactVision docs when useful.
 
 ## Build or change a scene
@@ -55,7 +55,7 @@ Viro Live is ReactVision's live scene preview; call it that when you talk to the
 
 1. Call `reactviro_validate_scene` on the relevant TSX. Treat it as component-name and prop-shape validation, not a full TypeScript check.
 2. Call `reactviro_check_platform_support` for each requested target and resolve or clearly report unsupported combinations.
-3. Call `reactviro_list_assets_needed` when the scene references assets. Use `reactviro_check_performance_budget` for applicable model URLs; state its format and budget limits. For a slow or heavy scene, follow the `performance-review` skill.
+3. When the scene references assets, read the asset list in `reactviro_validate_scene`'s result. Use `reactviro_check_performance_budget` for applicable model URLs; state its format and budget limits. For a slow or heavy scene, follow the `performance-review` skill.
 4. To show the developer a scene, use Viro Live (above), and check an open preview with `reactviro_screenshot_live_preview` or `reactviro_interact_live_preview` (taps, camera walks, animations). `reactviro_render_scene` is for what Viro Live does not take: a Studio scene as JSON (`format: "studio_json"`), or a quick check of one self-contained TSX string with no preview open. It substitutes placeholders for local assets unless real asset URLs are provided.
 5. Before selecting a project, environment, or team asset, call `reactviro_list_studio_content` and use its returned IDs. Do not guess IDs.
 6. To see a scene composited over a recorded AR session, use `reactviro_create_environment_render` for a Studio scene or team assets, or `reactviro_create_code_environment_render` then `reactviro_start_code_environment_render` for a local code bundle. From a chat, the Viro Live preview's "Render in a real space" panel does the same for the previewed scene. Follow up with `reactviro_get_environment_render` (or `reactviro_list_environment_renders`) for status and output. These runs are billed to the user's team: before starting one, say which scene and environment it will use and wait for the user to confirm. If a tool refuses the run, relay its message as written.

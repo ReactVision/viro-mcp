@@ -76,20 +76,20 @@ Every tool is prefixed `reactviro_`. The tools below are all in this repository;
 
 **Components and API**
 
-- `list_components`, `list_categories`, `get_component`: the component catalog, with forgiving name lookup (`"Box"` finds `ViroBox`)
-- `get_component_props`, `get_component_events`, `list_props`: props and event signatures extracted from the TypeScript source, including JSDoc and `@since`
+- `list_components`, `get_component`: the component catalog, with forgiving name lookup (`"Box"` finds `ViroBox`)
+- `get_component_props`, `list_props`: props and event signatures extracted from the TypeScript source, including JSDoc and `@since`
 - `get_platform_matrix`, `check_platform_support`: what works on iOS, Android, Meta Quest, visionOS and the web, and whether a given scene will
-- `list_lighting_models`, `list_physics_body_types`, `list_animation_easings`, `get_shader_uniforms`, `list_event_handlers`, `changelog_since`: AR domain reference
+- `changelog_since`: what changed since a version. The lighting model, physics body type, animation easing and shader modifier catalogs are docs read with `get_docs`
 
 **Search and source**
 
 - `search`, `list_files`, `get_file`, `get_docs`: hybrid full-text and semantic search over components, docs and examples
-- `get_overview`, `get_tree`, `stats`, `find_symbol`, `find_native_bridge`: find your way around the codebase
-- `list_examples`, `get_example`, `examples_using`: real AR scenes from the ViroReact showcase app
+- `get_overview`, `find_symbol`, `find_native_bridge`: find your way around the codebase
+- `list_examples`, `get_example`: real AR scenes from the ViroReact showcase app, filterable by the component they use
 
 **Scenes**
 
-- `generate_scene`, `validate_scene`, `list_assets_needed`: scaffold TSX and lint it against the extracted prop schemas
+- `generate_scene`, `validate_scene`: scaffold TSX, lint it against the extracted prop schemas and list the assets it needs
 - `diagnose_error`: match an error or stack trace against curated known issues
 
 **Only on the hosted server**

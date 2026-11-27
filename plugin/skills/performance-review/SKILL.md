@@ -10,7 +10,7 @@ Use this when a scene stutters, loads slowly, runs hot, crashes on a low-end dev
 ## Gather the numbers
 
 1. Ask which platforms the scene targets. Meta Quest has the tightest budgets.
-2. Call `reactviro_list_assets_needed` on each scene file to list its models, textures and sounds, local and remote.
+2. Call `reactviro_validate_scene` on each scene file. Its result lists the scene's models, textures and sounds, local and remote.
 3. Call `reactviro_check_performance_budget` with the remote GLB and glTF URLs (up to 10 a call) and the target platforms (`quest`, `mobile-ar`, `visionos`, `web`). It reports triangles and texture size against rough per-platform budgets.
    - It reads GLB, and glTF with embedded buffers only. A glTF with an external `.bin`, and VRX, FBX and OBJ, are reported as unsupported, not measured.
    - Its budgets are rough guidance: "within budget" means no obvious problem, "over budget" means worth a look. Say so when you report them.
