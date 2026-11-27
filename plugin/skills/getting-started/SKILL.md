@@ -67,7 +67,7 @@ Viro Live is ReactVision's live scene preview; call it that when you talk to the
 
 ## Move between Studio and code
 
-`reactviro_studio_to_tsx` and `reactviro_tsx_to_studio` are best-effort conversions; state what did not carry across (visual scripting, computed values, handlers). For an 8th Wall project, follow the `eighthwall-migration` skill.
+`reactviro_studio_to_tsx` is a best-effort conversion; state what did not carry across (Studio's visual scripting, and anything else in its warnings). For an 8th Wall project, follow the `eighthwall-migration` skill.
 
 ## Troubleshoot
 
