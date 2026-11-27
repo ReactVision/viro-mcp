@@ -1,0 +1,16 @@
+{
+  "name": "reactvision",
+  "owner": {
+    "name": "ReactVision"
+  },
+  "metadata": {
+    "description": "ReactVision's plugins for building ViroReact AR and VR experiences."
+  },
+  "plugins": [
+    {
+      "name": "reactvision-xr-builder",
+      "source": "plugin",
+      "description": "Build, preview, validate and render ViroReact AR and VR scenes with ReactVision's MCP."
+    }
+  ]
+}

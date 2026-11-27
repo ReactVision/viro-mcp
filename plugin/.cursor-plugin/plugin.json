@@ -1,0 +1,16 @@
+{
+  "name": "reactvision-xr-builder",
+  "displayName": "ReactVision XR Builder",
+  "version": "1.1.0",
+  "description": "Build, preview, validate and render ViroReact AR and VR scenes with ReactVision's MCP: live 3D previews, component docs, examples and 8th Wall migration.",
+  "author": {
+    "name": "ReactVision"
+  },
+  "publisher": "ReactVision",
+  "homepage": "https://www.reactvision.xyz/mcp",
+  "repository": "https://github.com/ReactVision/viro-mcp",
+  "license": "Elastic-2.0",
+  "keywords": ["ReactVision", "ViroReact", "XR", "AR", "VR", "React Native", "8th Wall", "Meta Quest", "visionOS"],
+  "logo": "assets/logo.png",
+  "mcpServers": "./.cursor-plugin/mcp.json"
+}
