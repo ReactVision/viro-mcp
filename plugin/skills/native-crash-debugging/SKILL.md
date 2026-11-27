@@ -27,7 +27,7 @@ Ask for whatever is missing:
 
 - `reactviro_find_symbol` locates a component, function or type in the ViroReact JavaScript source, with its definition and call sites. `reactviro_get_file` returns a file, or a range of lines.
 - `reactviro_find_native_bridge` turns a JavaScript prop, event or method name into the names it likely has in the native code (virocore, the Android JNI bridge, the iOS bridge). The server does not index the native code itself: give those names to the developer to search their native checkout or the crash's stack.
-- Check that the feature exists on their platform with `reactviro_check_platform_support` or `reactviro_get_platform_matrix`. A component missing on a platform can look like a crash.
+- Check that the feature exists on their platform with `reactviro_validate_scene` (pass a one-line scene and `platforms` set to their target) or `reactviro_get_platform_matrix`. A component missing on a platform can look like a crash.
 
 ## Reproduce and fix
 

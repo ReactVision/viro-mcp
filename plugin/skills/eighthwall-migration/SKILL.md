@@ -38,7 +38,7 @@ Ask which result they want, then pick the path:
 ## After converting
 
 1. Summarise the result: scenes, placements, assets uploaded, then the warnings, skipped items and scaffold warnings. List the TODO comments in the code, grouped by kind.
-2. Run `reactviro_validate_scene` on each scene file, and `reactviro_check_platform_support` for each platform the developer targets.
+2. Run `reactviro_validate_scene` on each scene file with `platforms` set to the platforms the developer targets, and resolve or report what a platform does not support.
 3. Show the scenes with Viro Live: `reactviro_live_preview` with a scene file as `entry` and the files it imports, then `reactviro_update_live_preview` for each change.
 4. The output is scene code, not a complete app. `package.json` pins nothing (`*`) and `App.tsx` only mounts `ViroARSceneNavigator`. Move the scenes into an Expo or React Native app with ViroReact installed, using `reactviro_get_docs` for the setup, and pin the versions their app uses.
 5. Work through the TODOs with the developer, one at a time, validating and updating the preview after each:

@@ -23,7 +23,7 @@ Use this when the developer wants to move to a newer `@reactvision/react-viro`, 
 
 1. Update `@reactvision/react-viro` and any packages the release requires. When it needs a newer React Native or Expo SDK, that is a larger upgrade of its own: say so and agree the order with the developer.
 2. Update the affected code.
-3. Run `reactviro_validate_scene` on every changed scene file, and `reactviro_check_platform_support` for each target platform.
+3. Run `reactviro_validate_scene` on every changed scene file with `platforms` set to the developer's targets, and resolve or report what a platform does not support.
 4. Show the scenes with Viro Live (`reactviro_live_preview`, then `reactviro_update_live_preview`) when a change affects how they look or behave.
 5. ViroReact is a native module: after the upgrade the app needs a native rebuild (a new development build, `expo prebuild` for Expo, `pod install` on iOS). A JavaScript reload alone is not enough.
 

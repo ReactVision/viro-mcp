@@ -37,7 +37,7 @@ The quickest start is ReactVision's starter kit: https://github.com/ReactVision/
 ## First scene
 
 1. Call `reactviro_generate_scene` with the closest features, and adapt its TSX to what the developer wants.
-2. Run `reactviro_validate_scene` and `reactviro_check_platform_support` for each target.
+2. Run `reactviro_validate_scene` with `platforms` set to the developer's targets, and resolve or report what a platform does not support.
 3. Show it with Viro Live (`reactviro_live_preview`) so the developer sees it before building.
 4. Wire it into the app with `ViroARSceneNavigator` (AR) or `ViroVRSceneNavigator` (VR), and list any assets it needs (`reactviro_validate_scene` returns them).
 
