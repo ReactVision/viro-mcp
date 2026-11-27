@@ -21,7 +21,6 @@ describe('applyArgAliases', () => {
       ['reactviro_find_symbol', { query: 'onAnchorFound' }, { name: 'onAnchorFound' }],
       ['reactviro_list_examples', { pattern: 'portal' }, { search: 'portal' }],
       ['reactviro_list_files', { query: 'components/AR' }, { path: 'components/AR' }],
-      ['reactviro_generate_scene', { features: ['text'], platform: 'quest' }, { features: ['text'], target_platform: 'quest' }],
       ['reactviro_validate_scene', { source: '<ViroBox />' }, { tsx: '<ViroBox />' }],
       ['reactviro_validate_scene', { tsx: '<ViroBox />', platform: 'quest' }, { tsx: '<ViroBox />', platforms: 'quest' }],
       ['reactviro_get_file', { path: 'ViroBox.tsx', start: 1, end: 40 }, { path: 'ViroBox.tsx', start_line: 1, end_line: 40 }],

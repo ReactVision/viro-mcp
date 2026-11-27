@@ -43,7 +43,7 @@
         "expected a string (for built-in components) or a class/function"
       ],
       "explanation": "Only ViroARScene is a real, navigator-specific scene component. 3D and VR both use the generic ViroScene for scene content — there is no Viro3DScene or ViroVRScene in @reactvision/react-viro. Code that assumes a `Viro${navigatorType}Scene` naming convention (matching the real `Viro${navigatorType}SceneNavigator`) will reference a component that doesn't exist, and React reports it as an invalid element type.",
-      "fix": "Use `<ViroARScene>` only when navigating with ViroARSceneNavigator; use the generic `<ViroScene>` for both Viro3DSceneNavigator and ViroVRSceneNavigator. This exact bug existed in reactviro_generate_scene's own template until it was caught by rendering the generated code through reactviro_render_scene — see src/tools/scene.ts's sceneComponentName().",
+      "fix": "Use `<ViroARScene>` only when navigating with ViroARSceneNavigator; use the generic `<ViroScene>` for both Viro3DSceneNavigator and ViroVRSceneNavigator.",
       "affects": [
         "web",
         "ios",

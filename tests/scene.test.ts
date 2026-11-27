@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { z } from 'zod';
-import { generateSceneCode, registerSceneTools, sceneComponentName, sceneNavigatorsIn, stripComponentPrefix, unknownComponentsIn } from '../src/tools/scene.js';
+import { registerSceneTools, sceneNavigatorsIn, stripComponentPrefix, unknownComponentsIn } from '../src/tools/scene.js';
 import type { StarterDb } from '../src/db.js';
 
 /** One captured `registerTool` call; the stub server below records these. */
@@ -36,56 +36,6 @@ describe('stripComponentPrefix', () => {
 
   it('leaves names without the prefix untouched', () => {
     expect(stripComponentPrefix('SomethingElse')).toBe('SomethingElse');
-  });
-});
-
-// Regression test for a real bug: the
-// generated TSX imported/rendered `Viro{navigator_type}Scene`, which is only
-// a real component for AR ("ViroARScene"). 3D and VR have no per-navigator
-// scene wrapper — both use the generic "ViroScene" — so the old code
-// generated a scene that imported a component that doesn't exist in
-// @reactvision/react-viro (Viro3DScene / ViroVRScene).
-describe('sceneComponentName', () => {
-  it('uses ViroARScene for AR', () => {
-    expect(sceneComponentName('AR')).toBe('ViroARScene');
-  });
-
-  it('uses the generic ViroScene for 3D (there is no Viro3DScene)', () => {
-    expect(sceneComponentName('3D')).toBe('ViroScene');
-  });
-
-  it('uses the generic ViroScene for VR (there is no ViroVRScene)', () => {
-    expect(sceneComponentName('VR')).toBe('ViroScene');
-  });
-});
-
-describe('generateSceneCode', () => {
-  it('imports and renders ViroScene, not Viro3DScene, for a 3D navigator', () => {
-    const code = generateSceneCode(['text'], '3D');
-    expect(code).toContain('ViroScene');
-    // \b so this doesn't false-positive on the (correct) Viro3DSceneNavigator.
-    expect(code).not.toMatch(/\bViro3DScene\b/);
-    expect(code).toMatch(/<ViroScene>[\s\S]*<\/ViroScene>/);
-  });
-
-  it('imports and renders ViroScene, not ViroVRScene, for a VR navigator', () => {
-    const code = generateSceneCode(['text'], 'VR');
-    expect(code).toContain('ViroScene');
-    // \b so this doesn't false-positive on the (correct) ViroVRSceneNavigator.
-    expect(code).not.toMatch(/\bViroVRScene\b/);
-    expect(code).toMatch(/<ViroScene>[\s\S]*<\/ViroScene>/);
-  });
-
-  it('still uses ViroARScene for an AR navigator', () => {
-    const code = generateSceneCode(['text'], 'AR');
-    expect(code).toContain('ViroARScene');
-    expect(code).toMatch(/<ViroARScene>[\s\S]*<\/ViroARScene>/);
-  });
-
-  it('always uses Viro{X}SceneNavigator regardless of the scene wrapper', () => {
-    expect(generateSceneCode(['text'], '3D')).toContain('Viro3DSceneNavigator');
-    expect(generateSceneCode(['text'], 'VR')).toContain('ViroVRSceneNavigator');
-    expect(generateSceneCode(['text'], 'AR')).toContain('ViroARSceneNavigator');
   });
 });
 

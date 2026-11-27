@@ -10,7 +10,7 @@
  *   - intel.ts        overview, find_symbol, native bridge
  *   - api.ts          AST-extracted props/events
  *   - examples.ts     showcase explorer
- *   - scene.ts        generate, validate (incl. platform support)
+ *   - scene.ts        validate (incl. platform support)
  *   - domain.ts       reference catalogs (served by get_docs), changelog
  *   - diagnose.ts     error/stack-trace -> known-issue lookup
  */

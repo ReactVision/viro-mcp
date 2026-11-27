@@ -89,7 +89,7 @@ Every tool is prefixed `reactviro_`. The tools below are all in this repository;
 
 **Scenes**
 
-- `generate_scene`, `validate_scene`: scaffold TSX, lint it against the extracted prop schemas, report what the target platforms do not support, and list the assets it needs
+- `validate_scene`: lint TSX against the extracted prop schemas, report what the target platforms do not support, and list the assets it needs
 - `diagnose_error`: match an error or stack trace against curated known issues
 
 **Only on the hosted server**

@@ -26,7 +26,6 @@ const ARG_ALIASES: Record<string, Record<string, string>> = {
   [`${P}_list_files`]: { query: 'path' },
   // `_get_docs` names a doc; its only other key is `list`, so none of these collides.
   [`${P}_get_docs`]: { topic: 'name', query: 'name', doc: 'name' },
-  [`${P}_generate_scene`]: { platform: 'target_platform' },
   // `_get_platform_matrix` really does take a singular `platform`, so this
   // tool's plural is the odd one out and callers reach for the singular. A
   // bare rename is enough only because the schema's `platforms` accepts a lone
