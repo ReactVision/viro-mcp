@@ -1,7 +1,10 @@
 {
   "mcpServers": {
     "reactvision-viro": {
-      "url": "https://mcp.reactvision.xyz/viro"
+      "url": "https://mcp.reactvision.xyz/viro",
+      "oauth": {
+        "clientId": "6447dfc8-8305-44ce-a868-f96980110ae8"
+      }
     }
   }
 }
