@@ -43,7 +43,7 @@ If a detail is unknown, offer a sensible default and keep moving. Do not ask the
 ## Build or change a scene
 
 1. For new or unfamiliar work, call `reactviro_get_overview` and consult relevant indexed docs, component props, platform matrix, or examples. Prefer specific lookups over guessing.
-2. For new scenes, select the closest supported features and call `reactviro_generate_scene`. Its feature list is fixed and it does not accept a free-text scene description; adapt its returned TSX to the user's request.
+2. For new scenes, write the TSX yourself from the props `reactviro_get_component_props` returns and the closest showcase examples (`reactviro_list_examples`, then `reactviro_get_example`), then check it with `reactviro_validate_scene`.
 3. Explain assumptions and preserve the user's existing architecture. Return complete, usable code or a focused patch and identify any assets or project wiring required.
 4. Do not claim the MCP edited the user's local project unless an available tool actually did so.
 
@@ -66,7 +66,7 @@ Viro Live is ReactVision's live scene preview; call it that when you talk to the
 
 ## Move between Studio and code
 
-`reactviro_studio_to_tsx` is a best-effort conversion; state what did not carry across (Studio's visual scripting, and anything else in its warnings). For an 8th Wall project, follow the `eighthwall-migration` skill.
+To convert a Studio scene to code, pass its `scene_id` from `reactviro_list_studio_content` to `reactviro_studio_to_tsx`. It is a best-effort conversion; state what did not carry across (Studio's visual scripting, and anything else in its warnings). For an 8th Wall project, follow the `eighthwall-migration` skill.
 
 ## Troubleshoot
 
