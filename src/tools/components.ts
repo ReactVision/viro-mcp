@@ -8,7 +8,6 @@
  * Tools:
  *   - reactviro_list_components
  *   - reactviro_get_component
- *   - reactviro_list_categories
  *   - reactviro_get_platform_matrix
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -124,8 +123,8 @@ export function registerComponentTools(server: McpServer, db: StarterDb): void {
 
   // ── list_components ──────────────────────────────────────────────────────
   server.registerTool(`${P}_list_components`, {
-    title: 'List ReactViro Components',
-    description: `Lists all ReactViro public components, grouped by semantic category.
+    title: 'List ViroReact Components',
+    description: `Lists all ViroReact public components, grouped by semantic category.
 
 Categories: AR, Geometry, Lighting, Materials, Animation, Effects, Portal,
 Media, Audio, UI, Navigation, Camera, Input, Environment, Transform, Studio,
@@ -182,7 +181,7 @@ ${P}_get_component to read the source.`,
     const byCategory: Record<string, string[]> = {};
     for (const c of slice) (byCategory[c.category] ??= []).push(c.name);
 
-    const lines: string[] = [`# ReactViro Components — ${total} total${category ? ` (${category})` : ''}\n`];
+    const lines: string[] = [`# ViroReact Components — ${total} total${category ? ` (${category})` : ''}\n`];
     for (const [cat, names] of Object.entries(byCategory).sort()) {
       lines.push(`## ${cat} (${names.length})`);
       lines.push(names.join(', '));
@@ -195,8 +194,8 @@ ${P}_get_component to read the source.`,
 
   // ── get_component ────────────────────────────────────────────────────────
   server.registerTool(`${P}_get_component`, {
-    title: 'Get ReactViro Component Source',
-    description: `Returns the full TypeScript source of a ReactViro component.
+    title: 'Get ViroReact Component Source',
+    description: `Returns the full TypeScript source of a ViroReact component.
 
 Name matching is case-insensitive and accepts:
   - exact: "ViroBox", "ViroARScene"
@@ -267,40 +266,10 @@ Returns: full source with category + file path metadata.`,
     };
   });
 
-  // ── list_categories ──────────────────────────────────────────────────────
-  server.registerTool(`${P}_list_categories`, {
-    title: 'List ReactViro Component Categories',
-    description: `Returns the catalog of component categories with counts. Useful as a starting point before drilling into ${P}_list_components.`,
-    inputSchema: z.object({}).strict(),
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async () => {
-    const { rows } = db.listFiles({ pkg: 'components', limit: 5000, offset: 0 });
-    const counts: Record<string, number> = {};
-    let total = 0;
-    for (const r of rows) {
-      if (!r.path.endsWith('.tsx') && !r.path.endsWith('.ts')) continue;
-      const basename = baseNameNoExt(r.path);
-      if (!isComponentFile(basename)) continue;
-      const cat = getCategory(basename);
-      counts[cat] = (counts[cat] ?? 0) + 1;
-      total++;
-    }
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const lines: string[] = [`# ReactViro — ${total} components in ${sorted.length} categories\n`];
-    for (const [cat, n] of sorted) {
-      lines.push(`- **${cat}** — ${n} component${n === 1 ? '' : 's'}`);
-    }
-    lines.push(`\n_Use ${P}_list_components with \`category="..."\` to drill in._`);
-    return {
-      content: [{ type: 'text', text: lines.join('\n') }],
-      structuredContent: { total, categories: Object.fromEntries(sorted) },
-    };
-  });
-
   // ── get_platform_matrix ──────────────────────────────────────────────────
   server.registerTool(`${P}_get_platform_matrix`, {
-    title: 'ReactViro Platform Compatibility Matrix',
-    description: `Returns the curated platform-support matrix for ReactViro features across iOS (ARKit), Android (ARCore), Meta Quest (OpenXR), and Apple visionOS.
+    title: 'ViroReact Platform Compatibility Matrix',
+    description: `Returns the curated platform-support matrix for ViroReact features across iOS (ARKit), Android (ARCore), Meta Quest (OpenXR), and Apple visionOS.
 
 Args:
   - platform (optional): Filter to one of "ios" | "android" | "quest" | "visionos". Omit to see the full matrix.
@@ -310,7 +279,7 @@ Args:
       response_format: z.enum(['markdown', 'json']).default('markdown'),
       // `features` and a plural `platforms` were the observed guesses. Neither
       // is a rename: there is no per-feature filter, and `platform` is single.
-    }).strict(`Unknown argument. ${P}_get_platform_matrix takes only an optional \`platform\` (one of ios, android, quest, visionos) and \`response_format\`. It has no per-feature or per-component filter: omit \`platform\` to get every feature row on every platform. To check the components a scene uses, call ${P}_check_platform_support with the scene as \`tsx\`.`),
+    }).strict(`Unknown argument. ${P}_get_platform_matrix takes only an optional \`platform\` (one of ios, android, quest, visionos) and \`response_format\`. It has no per-feature or per-component filter: omit \`platform\` to get every feature row on every platform. To check the components a scene uses, call ${P}_validate_scene with the scene as \`tsx\`.`),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   }, async ({ platform, response_format }) => {
     const matrix = loadPlatformMatrix();
@@ -332,7 +301,7 @@ Args:
       };
     }
 
-    const lines: string[] = [`# ReactViro — Platform Compatibility\n`];
+    const lines: string[] = [`# ViroReact — Platform Compatibility\n`];
 
     if (platforms.length > 1) {
       lines.push(`| Feature | ${platforms.map(p => matrix.platform_labels[p] ?? p).join(' | ')} | Notes |`);

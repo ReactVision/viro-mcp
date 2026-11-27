@@ -1,5 +1,5 @@
 {
-  "_comment": "Maps ReactViro JSX component names to the platform-matrix feature(s) they depend on. Used by reactviro_check_platform_support and reactviro_generate_scene to warn about unsupported combinations. Add/edit entries here as the SDK evolves.",
+  "_comment": "Maps ReactViro JSX component names to the platform-matrix feature(s) they depend on. Used by reactviro_validate_scene and reactviro_generate_scene to warn about unsupported combinations. Add/edit entries here as the SDK evolves.",
   "components": {
     "ViroARPlaneSelector":    ["Plane Detection (horizontal)"],
     "ViroARPlane":            ["Plane Detection (horizontal)"],

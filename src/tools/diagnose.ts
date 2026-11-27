@@ -95,7 +95,7 @@ export function respond(responseFormat: 'markdown' | 'json', structuredContent: 
 
 export function registerDiagnoseTools(server: McpServer, db: StarterDb): void {
   server.registerTool(`${P}_diagnose_error`, {
-    title: 'Diagnose a ReactViro Error or Crash',
+    title: 'Diagnose a ViroReact Error or Crash',
     description: `Matches a runtime error, exception or crash log against curated known traps — symptom, root cause and fix for issues that are easy to hit and hard to diagnose from the message alone, such as a native crash with no JS logs.
 
 Falls back to a full-text search of the indexed docs/changelog when nothing in the curated list matches, so you still get something even for errors that aren't (yet) a documented trap.

@@ -20,10 +20,6 @@ const COMPONENT_NAME = {
 const ARG_ALIASES: Record<string, Record<string, string>> = {
   [`${P}_get_component`]: COMPONENT_NAME,
   [`${P}_get_component_props`]: COMPONENT_NAME,
-  [`${P}_get_component_events`]: COMPONENT_NAME,
-  // The inverse of COMPONENT_NAME: this one really does take `component`, and
-  // callers arrive with `name` after being sent here by `_get_usage`.
-  [`${P}_examples_using`]: { name: 'component' },
   [`${P}_find_symbol`]: { query: 'name', symbol: 'name' },
   [`${P}_find_native_bridge`]: { query: 'symbol', component: 'symbol' },
   [`${P}_list_examples`]: { pattern: 'search', query: 'search' },
@@ -31,13 +27,11 @@ const ARG_ALIASES: Record<string, Record<string, string>> = {
   // `_get_docs` names a doc; its only other key is `list`, so none of these collides.
   [`${P}_get_docs`]: { topic: 'name', query: 'name', doc: 'name' },
   [`${P}_generate_scene`]: { platform: 'target_platform' },
-  [`${P}_validate_scene`]: { source: 'tsx', code: 'tsx', snippet: 'tsx' },
-  // The sibling `_get_platform_matrix` really does take a singular `platform`,
-  // so this tool's plural is the odd one out and callers reach for the
-  // singular. A bare rename is enough only because the schema's `platforms`
-  // accepts a lone string as well as an array, so keep the two in step.
-  // `code` mirrors `_validate_scene`, the other tool that takes a whole scene.
-  [`${P}_check_platform_support`]: { platform: 'platforms', code: 'tsx' },
+  // `_get_platform_matrix` really does take a singular `platform`, so this
+  // tool's plural is the odd one out and callers reach for the singular. A
+  // bare rename is enough only because the schema's `platforms` accepts a lone
+  // string as well as an array, so keep the two in step.
+  [`${P}_validate_scene`]: { source: 'tsx', code: 'tsx', snippet: 'tsx', platform: 'platforms' },
   // Both casings of both bounds, plus the two path synonyms. `_get_file` is the
   // most-guessed tool in the analytics, which is what a three-argument schema
   // whose arguments are all common words attracts.

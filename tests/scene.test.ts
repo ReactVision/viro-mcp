@@ -9,7 +9,16 @@ interface RegisteredTool {
   cfg: { inputSchema: z.ZodTypeAny };
   handler: (args: Record<string, unknown>) => Promise<{
     content: { type: string; text: string }[];
-    structuredContent?: { reports: { platform: string }[] };
+    structuredContent?: {
+      assets?: {
+        local: { path: string; line: number; kind: string }[];
+        remote: { uri: string; line: number }[];
+      };
+      platform_support?: {
+        features_used: string[];
+        reports: { platform: string; unsupported: { feature: string; reasons: { reason: string; line: number }[] }[] }[];
+      };
+    };
   }>;
 }
 
@@ -193,9 +202,12 @@ describe('scene tool argument schemas', () => {
         tools.set(name, { cfg, handler });
       },
     } as unknown as McpServer;
-    // registerSceneTools reads the db only from inside handlers, none of which
-    // this block drives, so registration needs no real index.
-    registerSceneTools(server, {} as StarterDb);
+    // validate_scene's handler reads the component index; an empty one is enough
+    // for the platform report, which reads only the static matrix files.
+    registerSceneTools(server, {
+      listApi: () => [],
+      listFiles: () => ({ total: 0, rows: [] }),
+    } as unknown as StarterDb);
     return tools;
   }
 
@@ -211,8 +223,8 @@ describe('scene tool argument schemas', () => {
     return result.error.issues.map((i) => i.message).join('\n');
   };
 
-  describe('check_platform_support', () => {
-    const schema = () => tool('reactviro_check_platform_support').cfg.inputSchema;
+  describe('validate_scene platforms', () => {
+    const schema = () => tool('reactviro_validate_scene').cfg.inputSchema;
 
     it('accepts a bare platform string, which is what the `platform` rename produces', () => {
       expect(schema().safeParse({ tsx: '<ViroBox />', platforms: 'quest' }).success).toBe(true);
@@ -231,23 +243,69 @@ describe('scene tool argument schemas', () => {
       expect(message).toContain('reactviro_get_platform_matrix');
     });
 
+    const run = async (args: Record<string, unknown>) => {
+      const { cfg, handler } = tool('reactviro_validate_scene');
+      return handler(cfg.inputSchema.parse(args) as Record<string, unknown>);
+    };
+
     it('reports on only the named platform when given a bare string', async () => {
-      const { cfg, handler } = tool('reactviro_check_platform_support');
-      const args = cfg.inputSchema.parse({
-        tsx: 'export default () => <ViroPortalScene />;',
-        platforms: 'quest',
-      });
-      const result = await handler(args as Record<string, unknown>);
-      expect(result.structuredContent?.reports.map((r) => r.platform)).toEqual(['quest']);
+      const result = await run({ tsx: 'export default () => <ViroPortalScene />;', platforms: 'quest' });
+      expect(result.structuredContent?.platform_support?.reports.map((r) => r.platform)).toEqual(['quest']);
     });
 
     it('defaults to every platform when none is given', async () => {
-      const { cfg, handler } = tool('reactviro_check_platform_support');
-      const args = cfg.inputSchema.parse({ tsx: 'export default () => <ViroPortalScene />;' });
-      const result = await handler(args as Record<string, unknown>);
-      expect(result.structuredContent?.reports.map((r) => r.platform)).toEqual([
+      const result = await run({ tsx: 'export default () => <ViroPortalScene />;' });
+      expect(result.structuredContent?.platform_support?.reports.map((r) => r.platform)).toEqual([
         'ios', 'android', 'quest', 'visionos',
       ]);
+    });
+
+    it('reports on no platform for an explicit empty array', async () => {
+      const result = await run({ tsx: 'export default () => <ViroPortalScene />;', platforms: [] });
+      expect(result.structuredContent?.platform_support?.reports).toEqual([]);
+    });
+
+    it('lists an unsupported feature with the tag and line that use it', async () => {
+      const result = await run({
+        tsx: 'export default () => <ViroPortalScene />;',
+        platforms: ['ios', 'visionos'],
+      });
+      const support = result.structuredContent?.platform_support;
+      expect(support?.features_used).toEqual(['Portals (ViroPortalScene)']);
+      expect(support?.reports[0]).toEqual({ platform: 'ios', unsupported: [] });
+      expect(support?.reports[1]?.unsupported).toMatchObject([
+        { feature: 'Portals (ViroPortalScene)', reasons: [{ reason: '<ViroPortalScene>', line: 1 }] },
+      ]);
+      const text = result.content.map((c) => c.text).join('\n');
+      expect(text).toContain('## Platform support');
+      expect(text).toContain('❌ **Portals (ViroPortalScene)**');
+    });
+
+    it('says so when the scene touches no platform-significant feature', async () => {
+      const result = await run({ tsx: 'export default () => <View />;' });
+      expect(result.structuredContent?.platform_support?.features_used).toEqual([]);
+      expect(result.content[0]!.text).toContain('No platform-significant features detected');
+    });
+
+    it('lists the local files and remote URIs the scene needs', async () => {
+      const result = await run({
+        tsx: [
+          'export default () => <>',
+          "  <Viro3DObject source={require('./res/robot.glb')} type=\"GLB\" />",
+          "  <ViroImage source={{ uri: 'https://example.com/poster.png' }} />",
+          '</>;',
+        ].join('\n'),
+        platforms: [],
+      });
+      expect(result.structuredContent?.assets).toEqual({
+        local: [{ path: './res/robot.glb', line: 2, kind: '3D model' }],
+        remote: [{ uri: 'https://example.com/poster.png', line: 3 }],
+      });
+      const text = result.content[0]!.text;
+      expect(text).toContain('## Local files to provide');
+      expect(text).toContain('`./res/robot.glb`');
+      expect(text).toContain('## Remote URIs');
+      expect(text.indexOf('## Platform support')).toBeLessThan(text.indexOf('## Local files to provide'));
     });
   });
 

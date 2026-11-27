@@ -14,6 +14,8 @@ export const config = {
   // ── Identity ───────────────────────────────────────────────────────────────
 
   name:        'viro-mcp',
+  /** The indexed project, as tool text names it. `name` is this server, not what it indexes. */
+  projectName: 'ViroReact',
   version:     '1.0.0',
   /** HTTP port — overridden by PORT env var. */
   port:        3000,
@@ -157,7 +159,7 @@ export const config = {
    * Helps the model pick the right tool and understand the corpus layout.
    */
   projectDescription: `
-ReactViro (@reactvision/react-viro) — AR/VR framework for React Native.
+ViroReact (@reactvision/react-viro) — AR/VR framework for React Native.
 Multi-platform: iOS (ARKit), Android (ARCore), Meta Quest (OpenXR), Apple visionOS.
 
 Indexed packages:

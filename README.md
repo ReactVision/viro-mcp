@@ -78,7 +78,7 @@ Every tool is prefixed `reactviro_`. The tools below are all in this repository;
 
 - `list_components`, `get_component`: the component catalog, with forgiving name lookup (`"Box"` finds `ViroBox`)
 - `get_component_props`, `list_props`: props and event signatures extracted from the TypeScript source, including JSDoc and `@since`
-- `get_platform_matrix`, `check_platform_support`: what works on iOS, Android, Meta Quest, visionOS and the web, and whether a given scene will
+- `get_platform_matrix`: what works on iOS, Android, Meta Quest and visionOS
 - `changelog_since`: what changed since a version. The lighting model, physics body type, animation easing and shader modifier catalogs are docs read with `get_docs`
 
 **Search and source**
@@ -89,7 +89,7 @@ Every tool is prefixed `reactviro_`. The tools below are all in this repository;
 
 **Scenes**
 
-- `generate_scene`, `validate_scene`: scaffold TSX, lint it against the extracted prop schemas and list the assets it needs
+- `generate_scene`, `validate_scene`: scaffold TSX, lint it against the extracted prop schemas, report what the target platforms do not support, and list the assets it needs
 - `diagnose_error`: match an error or stack trace against curated known issues
 
 **Only on the hosted server**

@@ -6,12 +6,12 @@
  * answers from the indexed knowledge base or the curated data/ files.
  *
  * Tool groups:
- *   - components.ts   list/get components, categories, platform matrix
- *   - intel.ts        overview, tree, stats, find_symbol, native bridge
+ *   - components.ts   list/get components, platform matrix
+ *   - intel.ts        overview, find_symbol, native bridge
  *   - api.ts          AST-extracted props/events
  *   - examples.ts     showcase explorer
- *   - scene.ts        generate, validate, list_assets_needed, check_platform_support
- *   - domain.ts       lighting models, physics, shaders, easings, changelog
+ *   - scene.ts        generate, validate (incl. platform support)
+ *   - domain.ts       reference catalogs (served by get_docs), changelog
  *   - diagnose.ts     error/stack-trace -> known-issue lookup
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';

@@ -23,7 +23,7 @@ describe('applyArgAliases', () => {
       ['reactviro_list_files', { query: 'components/AR' }, { path: 'components/AR' }],
       ['reactviro_generate_scene', { features: ['text'], platform: 'quest' }, { features: ['text'], target_platform: 'quest' }],
       ['reactviro_validate_scene', { source: '<ViroBox />' }, { tsx: '<ViroBox />' }],
-      ['reactviro_check_platform_support', { tsx: '<ViroBox />', platform: 'quest' }, { tsx: '<ViroBox />', platforms: 'quest' }],
+      ['reactviro_validate_scene', { tsx: '<ViroBox />', platform: 'quest' }, { tsx: '<ViroBox />', platforms: 'quest' }],
       ['reactviro_get_file', { path: 'ViroBox.tsx', start: 1, end: 40 }, { path: 'ViroBox.tsx', start_line: 1, end_line: 40 }],
       // Observed 2026-08-14 .. 2026-09-14; every case below is a real -32602.
       ['reactviro_get_component', { component_name: 'ViroBox' }, { name: 'ViroBox' }],
@@ -35,10 +35,7 @@ describe('applyArgAliases', () => {
       ['reactviro_find_native_bridge', { component: 'ViroARImageMarker' }, { symbol: 'ViroARImageMarker' }],
       ['reactviro_get_docs', { topic: 'plane-detection' }, { name: 'plane-detection' }],
       ['reactviro_get_docs', { query: 'plane-detection' }, { name: 'plane-detection' }],
-      ['reactviro_check_platform_support', { code: '<ViroBox />' }, { tsx: '<ViroBox />' }],
-      // Observed 2026-09-15: `_get_usage` redirects a component lookup here,
-      // and the caller carries `name` over from the sibling component tools.
-      ['reactviro_examples_using', { name: 'ViroParticleEmitter' }, { component: 'ViroParticleEmitter' }],
+      ['reactviro_validate_scene', { code: '<ViroBox />' }, { tsx: '<ViroBox />' }],
       // Observed 2026-09-21.
       ['reactviro_get_docs', { doc: 'plane-detection' }, { name: 'plane-detection' }],
     ];
@@ -59,7 +56,7 @@ describe('applyArgAliases', () => {
     const cases: [string, object, object][] = [
       // Observed 2026-09: a tool whose arguments are all optional.
       ['reactviro_get_platform_matrix', { random_string: 'dummy' }, {}],
-      ['reactviro_list_categories', { random_string: '' }, {}],
+      ['reactviro_get_overview', { random_string: '' }, {}],
       ['reactviro_get_component', { componentName: 'ViroBox', random_string: 'x' }, { name: 'ViroBox' }],
     ];
     for (const [tool, args, expected] of cases) {

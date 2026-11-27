@@ -9,7 +9,6 @@
  * Tools:
  *   - reactviro_get_component_props
  *   - reactviro_list_props
- *   - reactviro_get_component_events
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -71,7 +70,7 @@ export function registerApiTools(server: McpServer, db: StarterDb): void {
   // ── get_component_props ───────────────────────────────────────────────────
   server.registerTool(`${P}_get_component_props`, {
     title: 'Get Component Props Schema',
-    description: `Returns the AST-extracted props schema for a ReactViro component — name, type, optionality, JSDoc description, @since tag.
+    description: `Returns the AST-extracted props schema for a ViroReact component — name, type, optionality, JSDoc description, @since tag. Also returns its event handlers (\`on...\` props) with their TypeScript signatures.
 
 This is the source of truth for what props each component accepts. Use it before generating or validating scenes.
 
@@ -130,9 +129,9 @@ Args:
   // ── list_props ────────────────────────────────────────────────────────────
   server.registerTool(`${P}_list_props`, {
     title: 'Find Components by Prop Name',
-    description: `Inverse lookup: given a prop name (or pattern), returns every component that declares it.
+    description: `Inverse lookup: given a prop or event handler name (or pattern), returns every component that declares it.
 
-Useful for questions like "which components have a \`castsShadow\` prop?" or "what accepts \`physicsBody\`?".
+Useful for questions like "which components have a \`castsShadow\` prop?", "what accepts \`physicsBody\`?" or "which components fire \`onAnchorFound\`?".
 
 Args:
   - prop: Prop name or substring (case-insensitive). Examples: "castsShadow", "shaderModifiers", "physics", "position"
@@ -178,53 +177,6 @@ Args:
     return {
       content: [{ type: 'text', text: lines.join('\n') }],
       structuredContent: { prop, exact, total: hits.length, hits },
-    };
-  });
-
-  // ── get_component_events ──────────────────────────────────────────────────
-  server.registerTool(`${P}_get_component_events`, {
-    title: 'Get Component Event Handlers',
-    description: `Returns the event-handler props for a component (props matching the \`onX\` naming convention), with their full TypeScript signatures.
-
-Args:
-  - name: Component name (e.g. "ViroARScene", "ViroARImageMarker")
-  - response_format: "markdown" | "json"`,
-    inputSchema: z.object({
-      name:            z.string().min(1),
-      response_format: z.enum(['markdown', 'json']).default('markdown'),
-    }).strict(),
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async ({ name, response_format }) => {
-    const found = findComponentByName(db, name);
-    if (!found) {
-      const suggestions = suggestComponents(db, name);
-      return {
-        content: [{ type: 'text', text: `No AST data for "${name}".${suggestions.length ? `\n\nDid you mean: ${suggestions.join(', ')}` : ''}` }],
-      };
-    }
-    const componentName = baseNameNoExt(found.path);
-
-    if (response_format === 'json') {
-      const payload = { component: componentName, path: found.path, events: found.events };
-      return { content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }], structuredContent: payload };
-    }
-
-    const lines: string[] = [`# ${componentName} — Events (${found.events.length})\n`, `_Source: \`${found.path}\`_\n`];
-    if (found.events.length === 0) {
-      lines.push(`_No event handlers declared._`);
-    } else {
-      for (const e of found.events) {
-        lines.push(`### \`${e.name}\``);
-        lines.push('```ts');
-        lines.push(`${e.name}: ${e.signature}`);
-        lines.push('```');
-        if (e.description) lines.push(`> ${e.description}`);
-        lines.push('');
-      }
-    }
-    return {
-      content: [{ type: 'text', text: lines.join('\n') }],
-      structuredContent: { component: componentName, path: found.path, events: found.events },
     };
   });
 }

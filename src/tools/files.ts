@@ -8,6 +8,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { config } from '../../config.js';
 import type { StarterDb } from '../db.js';
+import { referenceDocs } from './domain.js';
 
 const P = config.toolPrefix;
 
@@ -43,13 +44,13 @@ export const GET_FILE_ARGS = z.object({
 export function registerFileTools(server: McpServer, db: StarterDb): void {
 
   server.registerTool(`${P}_list_files`, {
-    title: `List ${config.name} Files`,
-    description: `Lists files in the ${config.name} codebase.
+    title: `List ${config.projectName} Files`,
+    description: `Lists the indexed ${config.projectName} files.
 
-${config.projectDescription}
+Packages (\`pkg\`): "components" (the public TypeScript components), "docs", "examples" (showcase AR scenes), "onnx" (@reactvision/react-viro-onnx), "face-tracking" (@reactvision/react-viro-face-tracking), "visionos-template" (what an app's \`visionos/\` folder is created from) and "infra" (package.json, README and CHANGELOG files). Native code (virocore, the Android and iOS bridges) is not indexed. ${P}_get_overview describes each package.
 
 Args:
-  - pkg (string, optional): Filter by package label (see above)
+  - pkg (string, optional): Filter by package label
   - language (string, optional): typescript | sql | markdown | config | css | other
   - path (string, optional): Partial path filter
   - limit / offset: Pagination (default limit: 50)
@@ -76,7 +77,7 @@ Args:
       return { content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }], structuredContent: payload };
     }
 
-    const lines: string[] = [`# ${config.name} Files (${total} total)\n`];
+    const lines: string[] = [`# ${config.projectName} Files (${total} total)\n`];
     const byPkg: Record<string, typeof rows> = {};
     for (const f of rows) { if (!byPkg[f.pkg]) byPkg[f.pkg] = []; byPkg[f.pkg].push(f); }
     for (const [p, files] of Object.entries(byPkg).sort()) {
@@ -92,8 +93,8 @@ Args:
   });
 
   server.registerTool(`${P}_get_file`, {
-    title: `Get ${config.name} File Source`,
-    description: `Returns the source of any file in the ${config.name} project.
+    title: `Get ${config.projectName} File Source`,
+    description: `Returns the source of any file in the ${config.projectName} project.
 
 Args:
   - path: File path or partial name (case-insensitive). Examples: "ViroBox.tsx", "components/AR", "plane-detection"
@@ -125,8 +126,8 @@ Args:
   });
 
   server.registerTool(`${P}_search`, {
-    title: `Search ${config.name} Codebase`,
-    description: `Searches the ${config.name} codebase using FTS5 + regex fallback. Returns matching lines with file path and line number.
+    title: `Search ${config.projectName} Codebase`,
+    description: `Searches the ${config.projectName} codebase using FTS5 + regex fallback. Returns matching lines with file path and line number.
 
 Args:
   - query: Search term or regex pattern. Examples: "onAnchorFound", "shaderModifiers", "physicalWidth"
@@ -161,8 +162,8 @@ Args:
   });
 
   server.registerTool(`${P}_get_docs`, {
-    title: `Get ${config.name} Documentation`,
-    description: `Returns indexed documentation for ${config.name} (README, CHANGELOG, SHADER_REFERENCE, QUEST_SETUP).
+    title: `Get ${config.projectName} Documentation`,
+    description: `Returns indexed documentation for ${config.projectName} (README, CHANGELOG, SHADER_REFERENCE, QUEST_SETUP) and the reference catalogs: LIGHTING_MODELS (\`lightingModel\` options), PHYSICS_BODY_TYPES (\`physicsBody.type\` options), ANIMATION_EASINGS (easing curves) and SHADER_MODIFIERS (\`shaderModifiers\` entry points and their uniforms).
 
 Args:
   - name: Doc name or keyword (case-insensitive, partial match). Set list=true to see all available docs.
@@ -173,14 +174,17 @@ Args:
     }).strict(),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   }, async ({ name, list }) => {
+    const reference = referenceDocs();
+    const all = [...db.listDocs(), ...reference];
     if (list || !name) {
-      const docs = db.listDocs();
-      return { content: [{ type: 'text', text: `# ${config.name} Docs\n\n${docs.map(d => `- **${d.name}** — \`${d.path}\``).join('\n')}` }] };
+      return { content: [{ type: 'text', text: `# ${config.projectName} Docs\n\n${all.map(d => `- **${d.name}** — \`${d.path}\``).join('\n')}` }] };
     }
-    const match = db.getDoc(name);
+    const q = name.replace(/\.md$/i, '').toLowerCase();
+    const match = reference.find(d => d.name.toLowerCase() === q)
+      ?? db.getDoc(name)
+      ?? reference.find(d => d.name.toLowerCase().includes(q));
     if (!match) {
-      const available = db.listDocs().map(d => d.name).join(', ');
-      return { content: [{ type: 'text', text: `Doc "${name}" not found.\nAvailable: ${available}` }] };
+      return { content: [{ type: 'text', text: `Doc "${name}" not found.\nAvailable: ${all.map(d => d.name).join(', ')}` }] };
     }
     return { content: [{ type: 'text', text: `# ${match.name}\n// ${match.path}\n\n${match.content}` }] };
   });

@@ -5,9 +5,7 @@
  *   - reactviro_generate_scene         Ready-to-use TSX scaffold for AR/VR/3D
  *   - reactviro_validate_scene         Lint a TSX snippet against the
  *                                      AST-extracted component schemas
- *   - reactviro_list_assets_needed     Extract require(...) targets from a scene
- *   - reactviro_check_platform_support Cross-reference used components/props
- *                                      against the platform-support matrix
+ *                                      and the platform-support matrix
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -528,12 +526,103 @@ export function generateSceneCode(features: Feature[], navigator_type: 'AR' | 'V
 
 // ─── Tool registration ────────────────────────────────────────────────────────
 
+interface SceneAssets {
+  local:  { path: string; line: number; kind: string }[];
+  remote: { uri: string; line: number }[];
+}
+
+/** Static `require('...')` targets and literal `{ uri: '...' }` values. */
+function findSceneAssets(source: ts.SourceFile): SceneAssets {
+  const local: SceneAssets['local'] = [];
+  walkRequires(source, (p, line) => {
+    const ext = p.split('.').pop()?.toLowerCase() ?? '';
+    let kind = 'other';
+    if (['glb', 'gltf', 'vrx', 'obj', 'fbx'].includes(ext))      kind = '3D model';
+    else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext))        kind = 'texture/image';
+    else if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext))          kind = 'audio';
+    else if (['mp4', 'mov', 'webm'].includes(ext))                kind = 'video';
+    else if (ext === 'json')                                       kind = 'data';
+    local.push({ path: p, line, kind });
+  });
+
+  const remote: SceneAssets['remote'] = [];
+  const visitNode = (n: ts.Node): void => {
+    if (ts.isObjectLiteralExpression(n)) {
+      for (const prop of n.properties) {
+        if (ts.isPropertyAssignment(prop)
+            && ts.isIdentifier(prop.name) && prop.name.text === 'uri'
+            && ts.isStringLiteralLike(prop.initializer)) {
+          const lc = source.getLineAndCharacterOfPosition(prop.getStart(source));
+          remote.push({ uri: prop.initializer.text, line: lc.line + 1 });
+        }
+      }
+    }
+    ts.forEachChild(n, visitNode);
+  };
+  ts.forEachChild(source, visitNode);
+  return { local, remote };
+}
+
+interface PlatformReport {
+  platform:    string;
+  unsupported: { feature: string; reasons: { reason: string; line: number }[]; notes: string }[];
+}
+
+/** Matrix features the scene's components and props touch, and which targets lack them. Null when the matrix is missing. */
+function checkPlatformSupport(
+  source: ts.SourceFile,
+  platforms: Platform | Platform[] | undefined,
+): { features_used: string[]; reports: PlatformReport[]; labels: Record<string, string> } | null {
+  const matrix = getMatrix();
+  if (!matrix) return null;
+  const map = getFeatureMap();
+
+  // Only `undefined` falls back to the full matrix, so an explicit empty
+  // array still means "report on nothing".
+  const targets: Platform[] =
+    platforms === undefined ? (matrix.platforms as Platform[])
+    : Array.isArray(platforms) ? platforms
+    : [platforms];
+
+  const featuresUsed = new Map<string, { reason: string; line: number }[]>();
+  walkJsx(source, (u) => {
+    const compFeatures = map.components[u.tag];
+    if (compFeatures) {
+      for (const f of compFeatures) {
+        (featuresUsed.get(f) ?? featuresUsed.set(f, []).get(f))!.push({
+          reason: `<${u.tag}>`, line: u.line,
+        });
+      }
+    }
+    for (const a of u.attrs) {
+      const propFeatures = map.props[a.name];
+      if (propFeatures) {
+        for (const f of propFeatures) {
+          (featuresUsed.get(f) ?? featuresUsed.set(f, []).get(f))!.push({
+            reason: `${u.tag}.${a.name}`, line: u.line,
+          });
+        }
+      }
+    }
+  });
+
+  const reports: PlatformReport[] = targets.map((p) => {
+    const unsupported: PlatformReport['unsupported'] = [];
+    for (const [feat, reasons] of featuresUsed) {
+      const row = matrix.features.find(x => x.feature === feat);
+      if (row && !row.support[p]) unsupported.push({ feature: feat, reasons, notes: row.notes });
+    }
+    return { platform: p, unsupported };
+  });
+  return { features_used: [...featuresUsed.keys()], reports, labels: matrix.platform_labels };
+}
+
 export function registerSceneTools(server: McpServer, db: StarterDb): void {
 
   // ── generate_scene ────────────────────────────────────────────────────────
   server.registerTool(`${P}_generate_scene`, {
-    title: 'Generate ReactViro Scene Template',
-    description: `Generates a ready-to-use ReactViro scene template based on the requested features.
+    title: 'Generate ViroReact Scene Template',
+    description: `Generates a ready-to-use ViroReact scene template based on the requested features.
 
 This assembles a template from the fixed feature list below. It does not take a free-text description; pick the closest features and adapt the returned TSX.
 
@@ -558,7 +647,7 @@ Returns: complete TSX scene file with imports, setup, scene component, and navig
   }, async ({ features, navigator_type, target_platform }) => {
     const code = generateSceneCode(features, navigator_type);
 
-    let header = `// Generated by ReactViro MCP\n// Features: ${features.join(', ')} · Navigator: ${navigator_type}\n`;
+    let header = `// Generated by ViroReact MCP\n// Features: ${features.join(', ')} · Navigator: ${navigator_type}\n`;
     if (target_platform) {
       header += `// Target platform: ${target_platform}\n`;
       const warns = platformWarnings(features, target_platform);
@@ -574,7 +663,7 @@ Returns: complete TSX scene file with imports, setup, scene component, and navig
 
   // ── validate_scene ────────────────────────────────────────────────────────
   server.registerTool(`${P}_validate_scene`, {
-    title: 'Validate a ReactViro Scene Snippet',
+    title: 'Validate a ViroReact Scene Snippet',
     description: `Parses a TSX scene snippet, walks every Viro*/Studio* JSX element, and validates its props/attributes against the AST-extracted component schemas indexed in the KB.
 
 Returns a structured list of issues:
@@ -584,15 +673,25 @@ Returns a structured list of issues:
 
 Note: this is a name-and-shape lint, not a full type checker. Use tsc for type validation.
 
+Also reports which target platforms do not support a component or platform-significant prop the scene uses (e.g. shaderModifiers, physicsBody, morphTargets), checked against the platform support matrix. \`platforms\` narrows that report. To check one component, pass a one-line scene such as \`export default () => <ViroARImageMarker />;\`. To look up a feature by name, read ${P}_get_platform_matrix.
+
+Also lists the assets the scene needs: local files from static \`require('...')\` calls (3D models, textures, sounds, 360 images) that the developer must provide, and remote \`{ uri: '...' }\` URLs.
+
 Input must be TSX source. To validate a Studio scene (JSON), convert it with ${P}_studio_to_tsx first.
 
 Args:
-  - tsx: The scene source to validate. Pass the TSX text itself, not a file path.`,
+  - tsx: The scene source to validate. Pass the TSX text itself, not a file path.
+  - platforms (optional, defaults to all): one of 'ios' | 'android' | 'quest' | 'visionos', or an array of them`,
     inputSchema: z.object({
       tsx: z.string({ required_error: TSX_REQUIRED }).min(1, TSX_REQUIRED),
-    }).strict(`Unknown argument. ${P}_validate_scene takes exactly one argument, \`tsx\`. ${CANNOT_READ_FILES}`),
+      // Two separate z.enum instances on purpose: reusing one makes
+      // zod-to-json-schema emit the array branch as a $ref back to the first,
+      // and an advertised $ref is the kind of indirection that makes a caller
+      // guess, which is the whole reason this union exists.
+      platforms: z.union([z.enum(PLATFORM_VALUES), z.array(z.enum(PLATFORM_VALUES))]).optional(),
+    }).strict(`Unknown argument. ${P}_validate_scene takes \`tsx\` and optional \`platforms\`. ${CANNOT_READ_FILES} To check one component, pass a one-line scene such as \`export default () => <ViroARImageMarker />;\` as \`tsx\`. To look up a feature by name, read ${P}_get_platform_matrix, which lists every feature row.`),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async ({ tsx }) => {
+  }, async ({ tsx, platforms }) => {
     interface Issue {
       level:     'error' | 'warning';
       kind:      'unknown_component' | 'unknown_prop' | 'parse_error' | 'spread_skipped';
@@ -679,172 +778,44 @@ Args:
         lines.push(`- ${icon} **L${i.line}** [${i.kind}] ${i.message}${sug}`);
       }
     }
-    return {
-      content: [{ type: 'text', text: lines.join('\n') }],
-      structuredContent: { errors, warnings, issues },
-    };
-  });
 
-  // ── list_assets_needed ────────────────────────────────────────────────────
-  server.registerTool(`${P}_list_assets_needed`, {
-    title: 'List Assets Required by a Scene',
-    description: `Scans a TSX scene snippet for static \`require('...')\` calls and returns the list of asset paths the developer must provide (3D models, textures, sounds, 360 images, etc.).
-
-Dynamic requires and remote URLs (\`{ uri: '...' }\`) are detected separately.
-
-Args:
-  - tsx: The scene source to scan.`,
-    inputSchema: z.object({
-      tsx: z.string().min(1),
-    }).strict(),
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async ({ tsx }) => {
-    let source: ts.SourceFile;
-    try { source = parseTsx(tsx); }
-    catch (e) {
-      return { content: [{ type: 'text', text: `Parse error: ${(e as Error).message}` }] };
-    }
-
-    const assets: { path: string; line: number; kind: string }[] = [];
-    walkRequires(source, (p, line) => {
-      const ext = p.split('.').pop()?.toLowerCase() ?? '';
-      let kind = 'other';
-      if (['glb', 'gltf', 'vrx', 'obj', 'fbx'].includes(ext))      kind = '3D model';
-      else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext))        kind = 'texture/image';
-      else if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext))          kind = 'audio';
-      else if (['mp4', 'mov', 'webm'].includes(ext))                kind = 'video';
-      else if (ext === 'json')                                       kind = 'data';
-      assets.push({ path: p, line, kind });
-    });
-
-    // Detect { uri: '...' } usages (remote)
-    const remotes: { uri: string; line: number }[] = [];
-    const visitNode = (n: ts.Node): void => {
-      if (ts.isObjectLiteralExpression(n)) {
-        for (const prop of n.properties) {
-          if (ts.isPropertyAssignment(prop)
-              && ts.isIdentifier(prop.name) && prop.name.text === 'uri'
-              && ts.isStringLiteralLike(prop.initializer)) {
-            const lc = source.getLineAndCharacterOfPosition(prop.getStart(source));
-            remotes.push({ uri: prop.initializer.text, line: lc.line + 1 });
-          }
-        }
-      }
-      ts.forEachChild(n, visitNode);
-    };
-    ts.forEachChild(source, visitNode);
-
-    if (assets.length === 0 && remotes.length === 0) {
-      return { content: [{ type: 'text', text: 'No required assets detected.' }] };
-    }
-
-    const lines: string[] = [`# Required assets — ${assets.length} local + ${remotes.length} remote\n`];
-    if (assets.length > 0) {
-      lines.push(`## Local files (\`require(...)\`)\n`);
-      for (const a of assets) lines.push(`- L${a.line} · _${a.kind}_ — \`${a.path}\``);
-    }
-    if (remotes.length > 0) {
-      lines.push(`\n## Remote URIs\n`);
-      for (const r of remotes) lines.push(`- L${r.line} — \`${r.uri}\``);
-    }
-    return {
-      content: [{ type: 'text', text: lines.join('\n') }],
-      structuredContent: { local: assets, remote: remotes },
-    };
-  });
-
-  // ── check_platform_support ────────────────────────────────────────────────
-  server.registerTool(`${P}_check_platform_support`, {
-    title: 'Check Scene Platform Support',
-    description: `Walks a TSX scene, identifies the ReactViro components and platform-significant props (e.g. shaderModifiers, physicsBody, morphTargets), looks each one up in the platform support matrix, and reports unsupported combinations for the requested platforms.
-
-This takes a scene, which can be a single line: to check one component, pass e.g. \`export default () => <ViroARImageMarker />;\`. To look up a feature by name, read ${P}_get_platform_matrix, which lists every feature row and filters only by platform.
-
-Args:
-  - tsx: Scene source. Pass the TSX text itself, not a file path.
-  - platforms (optional, defaults to all): one of 'ios' | 'android' | 'quest' | 'visionos', or an array of them`,
-    inputSchema: z.object({
-      tsx: z.string({ required_error: TSX_REQUIRED }).min(1, TSX_REQUIRED),
-      // Two separate z.enum instances on purpose: reusing one makes
-      // zod-to-json-schema emit the array branch as a $ref back to the first,
-      // and an advertised $ref is the kind of indirection that makes a caller
-      // guess, which is the whole reason this union exists.
-      platforms: z.union([z.enum(PLATFORM_VALUES), z.array(z.enum(PLATFORM_VALUES))]).optional(),
-    }).strict(`Unknown argument. ${P}_check_platform_support takes \`tsx\` and optional \`platforms\`. To check one component, pass a one-line scene such as \`export default () => <ViroARImageMarker />;\` as \`tsx\`. To look up a feature by name, read ${P}_get_platform_matrix, which lists every feature row.`),
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async ({ tsx, platforms }) => {
-    const matrix = getMatrix();
-    if (!matrix) return { content: [{ type: 'text', text: 'platform-matrix.json not found.' }] };
-    const map = getFeatureMap();
-
-    // Only `undefined` falls back to the full matrix, so an explicit empty
-    // array still means "report on nothing", as it did before the union.
-    const targets: Platform[] =
-      platforms === undefined ? (matrix.platforms as Platform[])
-      : Array.isArray(platforms) ? platforms
-      : [platforms];
-
-    let source: ts.SourceFile;
-    try { source = parseTsx(tsx); }
-    catch (e) {
-      return { content: [{ type: 'text', text: `Parse error: ${(e as Error).message}` }] };
-    }
-
-    // Collect features touched by components and props in the scene
-    const featuresUsed = new Map<string, { reason: string; line: number }[]>();
-    walkJsx(source, (u) => {
-      const compFeatures = map.components[u.tag];
-      if (compFeatures) {
-        for (const f of compFeatures) {
-          (featuresUsed.get(f) ?? featuresUsed.set(f, []).get(f))!.push({
-            reason: `<${u.tag}>`, line: u.line,
-          });
-        }
-      }
-      for (const a of u.attrs) {
-        const propFeatures = map.props[a.name];
-        if (propFeatures) {
-          for (const f of propFeatures) {
-            (featuresUsed.get(f) ?? featuresUsed.set(f, []).get(f))!.push({
-              reason: `${u.tag}.${a.name}`, line: u.line,
-            });
-          }
-        }
-      }
-    });
-
-    if (featuresUsed.size === 0) {
-      return { content: [{ type: 'text', text: '✅ No platform-significant features detected in this scene.' }] };
-    }
-
-    interface Report { platform: string; unsupported: { feature: string; reasons: { reason: string; line: number }[]; notes: string }[] }
-    const reports: Report[] = [];
-    for (const p of targets) {
-      const unsupported: Report['unsupported'] = [];
-      for (const [feat, reasons] of featuresUsed) {
-        const row = matrix.features.find(x => x.feature === feat);
-        if (row && !row.support[p]) unsupported.push({ feature: feat, reasons, notes: row.notes });
-      }
-      reports.push({ platform: p, unsupported });
-    }
-
-    const lines: string[] = [`# Platform support report\n`];
-    lines.push(`Features touched: ${featuresUsed.size}\n`);
-    for (const r of reports) {
-      const lbl = matrix.platform_labels[r.platform] ?? r.platform;
-      lines.push(`## ${lbl}`);
-      if (r.unsupported.length === 0) {
-        lines.push(`✅ All features supported.\n`);
+    const support = checkPlatformSupport(source, platforms);
+    if (support) {
+      lines.push(`\n## Platform support\n`);
+      if (support.features_used.length === 0) {
+        lines.push(`✅ No platform-significant features detected in this scene.`);
+      } else if (support.reports.length === 0) {
+        lines.push(`No target platforms requested.`);
       } else {
-        for (const u of r.unsupported) {
-          lines.push(`- ❌ **${u.feature}** — used by ${u.reasons.map(x => `\`${x.reason}\` (L${x.line})`).join(', ')}${u.notes ? ` _(note: ${u.notes})_` : ''}`);
+        for (const r of support.reports) {
+          const lbl = support.labels[r.platform] ?? r.platform;
+          if (r.unsupported.length === 0) {
+            lines.push(`- **${lbl}**: ✅ all features supported`);
+            continue;
+          }
+          lines.push(`- **${lbl}**:`);
+          for (const u of r.unsupported) {
+            lines.push(`  - ❌ **${u.feature}** — used by ${u.reasons.map(x => `\`${x.reason}\` (L${x.line})`).join(', ')}${u.notes ? ` _(note: ${u.notes})_` : ''}`);
+          }
         }
-        lines.push('');
       }
+    }
+
+    const assets = findSceneAssets(source);
+    if (assets.local.length > 0) {
+      lines.push(`\n## Local files to provide (\`require(...)\`)\n`);
+      for (const a of assets.local) lines.push(`- L${a.line} · _${a.kind}_ — \`${a.path}\``);
+    }
+    if (assets.remote.length > 0) {
+      lines.push(`\n## Remote URIs\n`);
+      for (const r of assets.remote) lines.push(`- L${r.line} — \`${r.uri}\``);
     }
     return {
       content: [{ type: 'text', text: lines.join('\n') }],
-      structuredContent: { features_used: [...featuresUsed.keys()], reports },
+      structuredContent: {
+        errors, warnings, issues, assets,
+        ...(support ? { platform_support: { features_used: support.features_used, reports: support.reports } } : {}),
+      },
     };
   });
 }

@@ -8,7 +8,6 @@
  * Tools:
  *   - reactviro_list_examples
  *   - reactviro_get_example
- *   - reactviro_examples_using
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -26,45 +25,68 @@ export function registerExamplesTools(server: McpServer, db: StarterDb): void {
 
   // ── list_examples ─────────────────────────────────────────────────────────
   server.registerTool(`${P}_list_examples`, {
-    title: 'List ReactViro Example Scenes',
+    title: 'List ViroReact Example Scenes',
     description: `Lists real-world AR scene examples from the @reactvision/showcase repo (ar-examples).
 
 Examples cover plane detection, image tracking, custom shaders, particles, portals, depth/LiDAR collision, hand tracking, and more.
 
 Args:
   - search (optional): Substring filter on the example name.
+  - component (optional): Only the examples that use this component (e.g. "ViroParticleEmitter", "ParticleEmitter"), most occurrences first, with the lines where it appears. For "show me a real scene that uses X".
   - response_format: "markdown" | "json"`,
     inputSchema: z.object({
       search:          z.string().optional(),
+      component:       z.string().min(1).optional(),
       response_format: z.enum(['markdown', 'json']).default('markdown'),
     }).strict(),
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async ({ search, response_format }) => {
+  }, async ({ search, component, response_format }) => {
     const { rows } = db.listFiles({ pkg: 'examples', limit: 5000, offset: 0 });
-    const examples = rows
+    const examples: { name: string; path: string; size: number; lines?: { line: number; text: string }[] }[] = rows
       .filter(r => r.path.endsWith('.tsx') || r.path.endsWith('.ts'))
       .map(r => ({ name: baseNameNoExt(r.path), path: r.path, size: r.size }));
 
-    const filtered = search
+    let filtered = search
       ? examples.filter(e => e.name.toLowerCase().includes(search.toLowerCase()))
       : examples;
     filtered.sort((a, b) => a.name.localeCompare(b.name));
 
+    let usedComponent: string | undefined;
+    if (component) {
+      const cleaned = component.replace(/\.(tsx|ts)$/i, '').trim();
+      const lower = cleaned.toLowerCase();
+      usedComponent = lower.startsWith('viro') || lower.startsWith('studio') ? cleaned : `Viro${cleaned}`;
+      // Either form, at a word boundary.
+      const escaped = [cleaned, usedComponent]
+        .map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('|');
+      const hits = db.search({ query: `\\b(?:${escaped})\\b`, pkg: 'examples', limit: 300 });
+      const byPath: Record<string, { line: number; text: string }[]> = {};
+      for (const h of hits) (byPath[h.path] ??= []).push({ line: h.line, text: h.text });
+      filtered = filtered
+        .filter(e => byPath[e.path])
+        .map(e => ({ ...e, lines: byPath[e.path]! }))
+        .sort((a, b) => b.lines.length - a.lines.length);
+    }
+
     if (response_format === 'json') {
+      const payload = { total: filtered.length, ...(usedComponent ? { component: usedComponent } : {}), examples: filtered };
       return {
-        content: [{ type: 'text', text: JSON.stringify({ total: filtered.length, examples: filtered }, null, 2) }],
-        structuredContent: { total: filtered.length, examples: filtered },
+        content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
+        structuredContent: payload,
       };
     }
 
+    const scope = `${search ? ` matching "${search}"` : ''}${usedComponent ? ` using \`${usedComponent}\`` : ''}`;
     if (filtered.length === 0) {
-      return { content: [{ type: 'text', text: `No examples found${search ? ` matching "${search}"` : ''}.` }] };
+      return { content: [{ type: 'text', text: `No examples found${scope}.` }] };
     }
 
-    const lines: string[] = [`# ReactViro Examples — ${filtered.length}${search ? ` matching "${search}"` : ''}\n`];
+    const lines: string[] = [`# ViroReact Examples — ${filtered.length}${scope}\n`];
     for (const e of filtered) {
       const kb = e.size > 1024 ? `${Math.round(e.size / 1024)} KB` : `${e.size} B`;
       lines.push(`- **${e.name}** — \`${e.path}\` · ${kb}`);
+      for (const ln of (e.lines ?? []).slice(0, 3)) lines.push(`  - L${ln.line}: \`${ln.text.slice(0, 160)}\``);
     }
     lines.push(`\n_Use ${P}_get_example to read the source._`);
     return { content: [{ type: 'text', text: lines.join('\n') }] };
@@ -72,7 +94,7 @@ Args:
 
   // ── get_example ───────────────────────────────────────────────────────────
   server.registerTool(`${P}_get_example`, {
-    title: 'Get ReactViro Example Source',
+    title: 'Get ViroReact Example Source',
     description: `Returns the full TypeScript/TSX source of an AR-example scene.
 
 Args:
@@ -112,65 +134,5 @@ Args:
 
     const header = `// Example: ${baseNameNoExt(file.path)}\n// ${file.path}  (${Math.round(file.size / 1024)} KB)\n\n`;
     return { content: [{ type: 'text', text: header + file.source }] };
-  });
-
-  // ── examples_using ────────────────────────────────────────────────────────
-  server.registerTool(`${P}_examples_using`, {
-    title: 'Find Examples Using a Component',
-    description: `Given a ReactViro component name (e.g. "ViroParticleEmitter", "ViroPortalScene"), returns every showcase example that uses it.
-
-Useful for "show me a real scene that uses X" requests.
-
-Args:
-  - component: Component name (e.g. "ViroParticleEmitter", "ParticleEmitter", "ViroARScene")
-  - limit: Max examples returned (default 30).`,
-    inputSchema: z.object({
-      component: z.string().min(1),
-      limit:     z.number().int().min(1).max(100).default(30),
-    }).strict(),
-    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-  }, async ({ component, limit }) => {
-    const cleaned = component.replace(/\.(tsx|ts)$/i, '').trim();
-    const lower = cleaned.toLowerCase();
-    const withPrefix = lower.startsWith('viro') || lower.startsWith('studio') ? cleaned : `Viro${cleaned}`;
-
-    // Build a regex that matches either the original or the prefixed form,
-    // at a word boundary, to avoid false positives.
-    const escaped = [cleaned, withPrefix]
-      .map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-      .join('|');
-    const pattern = `\\b(?:${escaped})\\b`;
-
-    const hits = db.search({ query: pattern, pkg: 'examples', limit: limit * 3 });
-
-    // Group hits by file (one example may use the component on multiple lines)
-    const byFile: Record<string, { example: string; lines: { line: number; text: string }[] }> = {};
-    for (const h of hits) {
-      const name = baseNameNoExt(h.path);
-      (byFile[h.path] ??= { example: name, lines: [] }).lines.push({ line: h.line, text: h.text });
-    }
-
-    const examples = Object.entries(byFile).map(([path, info]) => ({ path, ...info }));
-    examples.sort((a, b) => b.lines.length - a.lines.length);
-    const top = examples.slice(0, limit);
-
-    if (top.length === 0) {
-      return { content: [{ type: 'text', text: `No examples use \`${component}\`.` }] };
-    }
-
-    const lines: string[] = [`# Examples using \`${withPrefix}\` — ${top.length} example${top.length !== 1 ? 's' : ''}\n`];
-    for (const e of top) {
-      lines.push(`## ${e.example} _(${e.lines.length} occurrence${e.lines.length !== 1 ? 's' : ''})_`);
-      lines.push(`\`${e.path}\``);
-      for (const ln of e.lines.slice(0, 3)) {
-        lines.push(`  - L${ln.line}: \`${ln.text.slice(0, 160)}\``);
-      }
-      lines.push('');
-    }
-    lines.push(`\n_Use ${P}_get_example to read full source._`);
-    return {
-      content: [{ type: 'text', text: lines.join('\n') }],
-      structuredContent: { component: withPrefix, total: top.length, examples: top },
-    };
   });
 }
